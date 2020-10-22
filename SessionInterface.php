@@ -12,28 +12,32 @@
 interface SessionInterface
 {
     /**
-     *    Set a value in the session
+     * Set a value in the session
      *
-     *    @param String $name
-     *    @param Mixed $value
+     * @param string $name  Property name
+     * @param mixed $value  Mixed value
      *
-     *    @return Session
-     **/
+     * @return Session
+     */
     public function set($name, $value);
 
+
     /**
-     *   Get value From Session by name
+     * Get value From Session by name
      *
-     *   @param String $name
+     * @param string $name Property name
      *
-     *   @return Mixed | null
+     * @return mixed | null
      */
     public function get($name);
 
+
     /**
-     *   Destroy All data from Session
+     * Destroy All data from Session
      *
-     *   @return void
+     * @return void
      **/
     public function destroy();
+
+
 }

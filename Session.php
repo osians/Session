@@ -11,26 +11,27 @@
  **/
 class Session implements SessionInterface
 {
+
     /**
-     *    Unique Instance
+     * Unique Instance
      *
-     *    @var Session
+     * @var Session
      */
-    private static $_instance;
+    private static $instance;
     
     /**
-     *    Expires session after 10 minutes(in Seconds)
+     * Expires session after 10 minutes(in Seconds)
      *
-     *   @var Integer
+     * @var Integer
      **/
     private $_sessionExpireTime = 600;
 
     /**
-     *    Session Hijacke Data
+     * Session Hijack Data
      *
-     *    @var Array
+     * @var stdClass
      */
-    protected $_data;
+    protected $_data = null;
 
     /**
      *    If true pull all cables from the 
@@ -42,15 +43,18 @@ class Session implements SessionInterface
 
 
     /**
-     *    Construct
+     * Construct
      *
-     *    @param Integer $expireTime
+     * @param Integer $expireTime
+     * @param string $key
      *
-     *    @return void
+     * @return void
      **/
     public function __construct($expireTime = null, $key = 'fingerprint')
     {
-        self::$_instance =& $this;
+        self::$instance =& $this;
+
+        $this->_initializeDataProperty();
 
         $this->setSessionExpireTime($expireTime);
         $this->_makeSessionSafe();
@@ -60,11 +64,20 @@ class Session implements SessionInterface
         }
         session_regenerate_id();
 
-        $this->_checkFingerprint();
+        $this->_checkFingerprint($key);
         $this->_checkSessionExpireTime();
     }
 
-    /**
+    protected function _initializeDataProperty()
+    {
+        $this->_data = new stdClass();
+        $this->_data->time = null;
+        $this->_data->fingerprint = null;
+
+        return $this;
+    }
+
+   /**
      *    Disable some configs to make session more safe
      *
      *    @return Session
@@ -99,17 +112,17 @@ class Session implements SessionInterface
      */
     private function _isHttps()
     {
-        return ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443)
-        ? true
-        : false;
+        return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
     }
 
     /**
-     *    Check Fingerprint to avoid Hijacking
+     * Check Fingerprint to avoid Hijacking
      *
-     *    @return Session
+     * @param string $key
+     *
+     * @return Session
      */
-    protected function _checkFingerprint()
+    protected function _checkFingerprint($key)
     {
         $this->_data = &$_SESSION[$key];
 
@@ -121,11 +134,13 @@ class Session implements SessionInterface
     }
 
     /**
-     *    Generate a fingerprint based on timestamp and user agent.
+     * Generate a fingerprint based on timestamp and user agent.
      *
-     *    @source https://github.com/CVM/Session-Security/blob/master/session_security.php
+     * @source https://github.com/CVM/Session-Security/blob/master/session_security.php
      * 
-     *    @param int $time
+     * @param int $time
+     *
+     * @return Session
      */
     protected function _generateFingerprint($time = 0)
     {
@@ -223,9 +238,9 @@ class Session implements SessionInterface
     }
 
     /**
-     *    Get Session Expire Time
+     * Get Session Expire Time
      *
-     *    @return Integer
+     * @return Integer
      **/
     public function getExpiretime()
     {
@@ -233,16 +248,18 @@ class Session implements SessionInterface
     }
 
     /**
-     *    Singleton
+     * Singleton
      *
-     *    @return Session
+     * @param integer $expireTime
+     *
+     * @return Session
      **/
     public static function getInstance($expireTime = null)
     {
-        if(!isset(self::$_instance)) {
-            self::$_instance = new self($expireTime);
+        if(!isset(self::$instance)) {
+            self::$instance = new self($expireTime);
         }
-        return self::$_instance;
+        return self::$instance;
     }
 
     /**
@@ -280,11 +297,11 @@ class Session implements SessionInterface
     }
 
     /**
-     *   Removes value from Session Array
+     * Removes value from Session Array
      *
-     *   @param String $name
+     * @param String $name
      *
-     *   @return Session
+     * @return Session
      **/
     public function del($name)
     {
@@ -293,9 +310,12 @@ class Session implements SessionInterface
     }
     
     /**
-     *   magic method
+     * magic method
      *
-     *   @return Session
+     * @param string $name
+     * @param mixed $value
+     *
+     * @return Session
      **/
     public function __set($name, $value)
     {
@@ -304,9 +324,11 @@ class Session implements SessionInterface
     }
 
     /**
-     *   Magic method
+     * Magic method
      *
-     *   @return Mixed
+     * @param string $name
+     *
+     * @return Mixed
      **/
     public function __get($name)
     {
