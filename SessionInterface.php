@@ -39,5 +39,4 @@ interface SessionInterface
      **/
     public function destroy();
 
-
 }

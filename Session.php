@@ -11,7 +11,6 @@
  **/
 class Session implements SessionInterface
 {
-
     /**
      * Unique Instance
      *
@@ -68,6 +67,26 @@ class Session implements SessionInterface
         $this->_checkSessionExpireTime();
     }
 
+
+    /**
+     * Singleton
+     *
+     * @param integer $expireTime
+     *
+     * @return Session
+     **/
+    public static function getInstance($expireTime = null)
+    {
+        if(!isset(self::$instance)) {
+            self::$instance = new self($expireTime);
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Initialize data structure
+     * @return $this
+     */
     protected function _initializeDataProperty()
     {
         $this->_data = new stdClass();
@@ -118,13 +137,23 @@ class Session implements SessionInterface
     /**
      * Check Fingerprint to avoid Hijacking
      *
+<<<<<<< HEAD
      * @param string $key
      *
      * @return Session
+=======
+     *    @param String $key
+     *
+     *    @return Session
+>>>>>>> master
      */
     protected function _checkFingerprint($key)
     {
         $this->_data = &$_SESSION[$key];
+
+        if (null === $this->_data) {
+            $this->_data = new \StdClass;
+        }
 
         if (empty($this->_data->fingerprint)) {
             return $this->_generateFingerprint();
@@ -148,15 +177,15 @@ class Session implements SessionInterface
         if ($time === 0) {
             $time = time();
         }
-        
+
         // Create data arrays to pick values from to form the basis for the fingerprint.
         $fingers = explode(' ', $_SERVER['HTTP_USER_AGENT']);
-        $fingers2 = explode(',', $_SERVER['HTTP_ACCEPT']);
-        
+        $fingers2 = explode(',', $_SERVER['HTTP_USER_AGENT']);
+
         // Based on the time, select the array indexes to use.      
         $i = $time % count($fingers);
         $j = $time % count($fingers2);
-        
+
         // Generate the fingerprint and save the timestamp (so the process is repeatable).
         $this->_data->fingerprint = sha1($fingers[$i] . $fingers2[$j] . $time);
         $this->_data->time = $time;
@@ -174,23 +203,21 @@ class Session implements SessionInterface
         // Save the last fingerprint for comparison and 
         // regenerate the fingerprint based on the stored timestamp.
         $lastFingerprint = $this->_data->fingerprint;
+
         $this->_generateFingerprint($this->_data->time);
-        
+
         // If the request originated from the same user, they should match.
         if ($lastFingerprint === $this->_data->fingerprint) {
             // Generate a new fingerprint for next load (to tighten the window of opportunity).
-            $this->_generateFingerprint();
+            return $this->_generateFingerprint();
         } 
 
-        else {
-            // Fingerprint mismatch. Move to a new session ID and clear the data.
-            session_regenerate_id();
-            session_destroy();
-            session_start();
-            
-            // Set object status to denote session hijack was attempted.
-            $this->_hijacked = true;
-        }
+        // Fingerprint mismatch. Move to a new session ID and clear the data.
+        $this->destroy();
+        session_start();
+        
+        // Set object status to denote session hijack was attempted.
+        $this->_hijacked = true;
 
         return $this;
     }
@@ -244,22 +271,7 @@ class Session implements SessionInterface
      **/
     public function getExpiretime()
     {
-        return $this->_sessionExpireTime ;
-    }
-
-    /**
-     * Singleton
-     *
-     * @param integer $expireTime
-     *
-     * @return Session
-     **/
-    public static function getInstance($expireTime = null)
-    {
-        if(!isset(self::$instance)) {
-            self::$instance = new self($expireTime);
-        }
-        return self::$instance;
+        return $this->_sessionExpireTime;
     }
 
     /**
@@ -347,5 +359,7 @@ class Session implements SessionInterface
         $_SESSION = array();
         session_regenerate_id();
         session_destroy();
+
+        return $this;
     }
 }
