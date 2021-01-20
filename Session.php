@@ -125,9 +125,8 @@ class Session implements SessionInterface
     }
 
     /**
-     *    Check if Connection is runnig over https protocol
-     *
-     *    @return boolean
+     * Check if Connection is runnig over https protocol
+     * @return boolean
      */
     private function _isHttps()
     {
@@ -136,16 +135,8 @@ class Session implements SessionInterface
 
     /**
      * Check Fingerprint to avoid Hijacking
-     *
-<<<<<<< HEAD
-     * @param string $key
-     *
-     * @return Session
-=======
-     *    @param String $key
-     *
-     *    @return Session
->>>>>>> master
+     * @param  string $key
+     * @return $this
      */
     protected function _checkFingerprint($key)
     {
